@@ -1,24 +1,34 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
 import './App.css';
 import web3 from './web3';
 import bocai from './bocai';
 
 class App extends Component {
   state = {
-    manager:'',
-    players:[],
-    balance:'',
-    value:'',
-    message:''
+    manager: '',
+    players: [],
+    balance: '',
+    value: '',
+    message: '',
+    loading: false
   }
-  async componentDidMount(){
+  async componentDidMount() {
+    await this.loadContractData();
+  }
 
-    const manager=await bocai.methods.manager().call();
-    const players=await bocai.methods.getPlayers().call();
-    const balance=await web3.eth.getBalance(bocai.options.address);
-
-    this.setState({manager,players,balance});
+  loadContractData = async () => {
+    try {
+      this.setState({ loading: true });
+      const [manager, players, balance] = await Promise.all([
+        bocai.methods.manager().call(),
+        bocai.methods.getPlayers().call(),
+        web3.eth.getBalance(bocai.options.address)
+      ]);
+      this.setState({ manager, players, balance, loading: false });
+    } catch (error) {
+      console.error('加载合约数据失败:', error);
+      this.setState({ message: '加载数据失败，请刷新页面重试 ', loading: false });
+    }
   }
 
 sendOrther= async event =>{
